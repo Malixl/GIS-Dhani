@@ -31,7 +31,8 @@
     <link href="{{ asset('assets') }}/css/style.css" rel="stylesheet">
 
     {{-- DATA TABLE --}}
-    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.3/css/dataTables.dataTables.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.3/css/dataTables.bootstrap5.css" />
 
     {{-- LEAFLET --}}
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -183,11 +184,12 @@
     <script src="assets/js/main.js"></script>
 
     {{-- DATA TABLE --}}
+    <script src="https://code.jquery.com/jquery-3.7.1.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/2.0.3/js/dataTables.js"></script>
+    <script src="https://cdn.datatables.net/2.0.3/js/dataTables.bootstrap5.js"></script>
     <script>
-        $(document).ready(function() {
-            $('#myTable').DataTable();
-        });
+        new DataTable('#myTable');
     </script>
 
     {{-- LEAFLET --}}
