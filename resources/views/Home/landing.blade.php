@@ -10,8 +10,8 @@
     <meta content="" name="keywords">
 
     <!-- Favicons -->
-    <link href="assets/img/favicon.png" rel="icon">
-    <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+    <link href="{{ asset('assets/img/favicon.png') }}" rel="icon">
+    <link href="{{ asset('assets/img/apple-touch-icon.png') }}" rel="apple-touch-icon">
 
     <!-- Google Fonts -->
     <link
@@ -19,19 +19,20 @@
         rel="stylesheet">
 
     <!-- Vendor CSS Files -->
-    <link href="assets/vendor/aos/aos.css" rel="stylesheet">
-    <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
-    <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
-    <link href="assets/vendor/glightbox/css/glightbox.min.css" rel="stylesheet">
-    <link href="assets/vendor/remixicon/remixicon.css" rel="stylesheet">
-    <link href="assets/vendor/swiper/swiper-bundle.min.css" rel="stylesheet">
+    <link href="{{ asset('assets/vendor/aos/aos.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/vendor/boxicons/css/boxicons.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/vendor/glightbox/css/glightbox.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/vendor/remixicon/remixicon.css') }}" rel="stylesheet">
+    <link href="{{ asset('assets/vendor/swiper/swiper-bundle.min.css') }}" rel="stylesheet">
 
     <!-- Template Main CSS File -->
     <link href="{{ asset('assets') }}/css/style.css" rel="stylesheet">
 
     {{-- DATA TABLE --}}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" />
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/2.0.3/css/dataTables.bootstrap5.css" />
 
     {{-- LEAFLET --}}
@@ -102,6 +103,12 @@
 
                 <div id="maps" style="height: 500px"></div>
 
+                <!-- Tempatkan ini di dalam body HTML Anda -->
+                <div id="control-panel">
+                    <h3>Pilih Jaringan Irigasi:</h3>
+                    <div id="checkboxes"></div>
+                </div>
+
             </div>
         </section><!-- End About Section -->
 
@@ -114,31 +121,15 @@
                 </div>
 
                 <table class="table table-striped" id="myTable">
-                    <thead>
+                    <thead id="myTableHead">
                         <tr>
                             <th scope="col">No.</th>
-                            <th scope="col">Nama Kelompok</th>
-                            <th scope="col">Nama Ketua</th>
-                            <th scope="col">Kontak</th>
-                            <th scope="col">Kecamatan</th>
-                            <th scope="col">Kelurahan</th>
-                            <th scope="col">LBS (Ha)</th>
-                            <th scope="col">IP</th>
-                            <th scope="col">Pola Tanam</th>
+                            <th scope="col">Nama Objek</th>
+                            <th scope="col">Keterangan</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>1</td>
-                            <td>Kelompok Dummy</td>
-                            <td>Ketua Dummy</td>
-                            <td>Kontak Dummy</td>
-                            <td>Kecamatan Dummy</td>
-                            <td>Kelurahan Dummy</td>
-                            <td>LBS Dummy</td>
-                            <td>IP Dummy</td>
-                            <td>Pola Tanam Dummy</td>
-                        </tr>
+                    <tbody id="myTableBody">
+                        <!-- Baris akan diisi oleh JavaScript -->
                     </tbody>
                 </table>
 
@@ -172,13 +163,13 @@
             class="bi bi-arrow-up-short"></i></a>
 
     <!-- Vendor JS Files -->
-    <script src="assets/vendor/purecounter/purecounter_vanilla.js"></script>
-    <script src="assets/vendor/aos/aos.js"></script>
-    <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-    <script src="assets/vendor/glightbox/js/glightbox.min.js"></script>
-    <script src="assets/vendor/isotope-layout/isotope.pkgd.min.js"></script>
-    <script src="assets/vendor/swiper/swiper-bundle.min.js"></script>
-    <script src="assets/vendor/php-email-form/validate.js"></script>
+    <script src="{{ asset('assets/vendor/purecounter/purecounter_vanilla.js') }}"></script>
+    <script src="{{ asset('assets/vendor/aos/aos.js') }}"></script>
+    <script src="{{ asset('assets/vendor/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <script src="{{ asset('assets/vendor/glightbox/js/glightbox.min.js') }}"></script>
+    <script src="{{ asset('assets/vendor/isotope-layout/isotope.pkgd.min.js') }}"></script>
+    <script src="{{ asset('assets/vendor/swiper/swiper-bundle.min.js') }}"></script>
+    <script src="{{ asset('assets/vendor/php-email-form/validate.js') }}"></script>
 
     <!-- Template Main JS File -->
     <script src="assets/js/main.js"></script>
@@ -205,8 +196,95 @@
             maxZoom: 20,
             subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
         }).addTo(map);
+
+        // Fungsi untuk memuat GeoJSON dan menambahkannya ke peta
+        function addGeoJsonLayer(data) {
+            L.geoJSON(data, {
+                style: function (feature) {
+                    return {color: 'blue'}; // Mengubah warna menjadi biru terang
+                }
+            }).addTo(map);
+        }
+
+        // Muat data GeoJSON dari file lokal atau server
+        fetch('/assets/IRIGASI_BOALEMO.json')
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(json) {
+                addGeoJsonLayer(json);
+            })
+            .catch(function(err) {
+                console.log('Error memuat data GeoJSON: ' + err);
+            });
     </script>
 
+    <script src="{{ asset('assets/js/irigasiDataHandler.js') }}"></script>
+
+    <!-- Script untuk memuat GeoJSON dan menambahkan kontrol checkbox -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var map = L.map('maps').setView([0.5351126, 122.338338], 12);
+
+            L.tileLayer('http://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}', {
+                maxZoom: 20,
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
+            }).addTo(map);
+
+            var geojsonLayer;
+
+            fetch('/assets/IRIGASI_BOALEMO.json')
+                .then(response => response.json())
+                .then(data => {
+                    geojsonLayer = L.geoJSON(data, {
+                        style: function(feature) {
+                            return {color: 'blue'};
+                        },
+                        filter: function(feature, layer) {
+                            return feature.properties.REMARK === "Jaringan Irigasi Tabulo Latula"; // Default filter
+                        }
+                    }).addTo(map);
+                    initializeCheckboxes(data);
+                });
+
+            // function initializeCheckboxes(data) {
+            //     const remarks = [...new Set(data.features.map(item => item.properties.REMARK))];
+            //     const container = document.getElementById('checkboxes');
+            //     remarks.forEach(remark => {
+            //         const checkbox = document.createElement('input');
+            //         checkbox.type = 'checkbox';
+            //         checkbox.id = remark;
+            //         checkbox.checked = remark === "Jaringan Irigasi Tabulo Latula"; // Default checked
+            //         checkbox.onchange = function() {
+            //             updateMap(remark, this.checked);
+            //         };
+
+            //         const label = document.createElement('label');
+            //         label.htmlFor = remark;
+            //         label.appendChild(document.createTextNode(remark));
+
+            //         container.appendChild(checkbox);
+            //         container.appendChild(label);
+            //         container.appendChild(document.createElement('br'));
+            //     });
+            // }
+
+            // function updateMap(remark, checked) {
+            //     map.removeLayer(geojsonLayer);
+            //     geojsonLayer = L.geoJSON(data, {
+            //         style: function(feature) {
+            //             return {color: 'blue'};
+            //         },
+            //         filter: function(feature, layer) {
+            //             if (checked) {
+            //                 return feature.properties.REMARK === remark;
+            //             }
+            //             return false;
+            //         }
+            //     }).addTo(map);
+            // }
+        });
+    </script>
 </body>
 
 </html>
