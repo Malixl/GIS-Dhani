@@ -103,12 +103,6 @@
 
                 <div id="maps" style="height: 500px"></div>
 
-                <!-- Tempatkan ini di dalam body HTML Anda -->
-                <div id="control-panel">
-                    <h3>Pilih Jaringan Irigasi:</h3>
-                    <div id="checkboxes"></div>
-                </div>
-
             </div>
         </section><!-- End About Section -->
 
@@ -125,10 +119,13 @@
                         <tr>
                             <th scope="col">No.</th>
                             <th scope="col">Nama Objek</th>
+                            <th scope="col">Wilayah Administrasi</th>
                             <th scope="col">Keterangan</th>
+                            <th scope="col">Sumber Data</th>
+                            <th scope="col">Kabupaten</th>
                         </tr>
                     </thead>
-                    <tbody id="myTableBody">
+                    <tbody id="tableBody">
                         <!-- Baris akan diisi oleh JavaScript -->
                     </tbody>
                 </table>
@@ -193,98 +190,83 @@
         map.addControl(new L.Control.Fullscreen());
 
         googleTerrain = L.tileLayer('http://{s}.google.com/vt?lyrs=s,h&x={x}&y={y}&z={z}', {
-            maxZoom: 20,
+            zoom: 20,
             subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
         }).addTo(map);
 
-        // Fungsi untuk memuat GeoJSON dan menambahkannya ke peta
-        function addGeoJsonLayer(data) {
-            L.geoJSON(data, {
-                style: function (feature) {
-                    return {color: 'blue'}; // Mengubah warna menjadi biru terang
+        map.createPane('panePolygons');
+        map.getPane('panePolygons').style.zIndex = 400;
+
+        function getRandomColor(){
+            var letters = '0123456789ABCDEF';
+            var color = '#';
+            for(var i = 0; i < 6; i++){
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+        console.log(getRandomColor())
+
+        var wadmkcColors = {}
+        function addGeoJsonData(geoJsonData, datasetName) {
+            L.geoJSON(geoJsonData, {
+                pane: datasetName === "Boalemo" ? "panePolygons" : "overlayPane",
+                style: function (feature){
+                    if(datasetName === "Irigasi"){
+                        return {
+                            color : 'blue',
+                            weight: 3
+                        }
+                    }else if(datasetName === "Boalemo"){
+                        if(!wadmkcColors[feature.properties.WADMKC]){
+                            wadmkcColors[feature.properties.WADMKC] = getRandomColor();
+                        }
+                        return {
+                            color : 'black',
+                            weight: 2,
+                            fillColor: wadmkcColors[feature.properties.WADMKC],
+                            fillOpacity: 0.5
+                        }
+                    }
+                },
+                onEachFeature: function (feature, layer) {
+                    var popupContent = "Dataset: " + datasetName + "<br>";
+                    if (feature.properties && feature.properties.WADMKC) {
+                        popupContent += "Name: " + feature.properties.WADMKC;
+                    }
+                    layer.bindPopup(popupContent);
                 }
             }).addTo(map);
         }
-
-        // Muat data GeoJSON dari file lokal atau server
-        fetch('/assets/IRIGASI_BOALEMO.json')
+         fetch('assets/BOALEMO.json')
             .then(function(response) {
                 return response.json();
             })
             .then(function(json) {
-                addGeoJsonLayer(json);
+                addGeoJsonData(json, "Boalemo");
             })
             .catch(function(err) {
-                console.log('Error memuat data GeoJSON: ' + err);
+                console.error('Error memuat data GeoJSON: ' + err);
             });
+
+
+        // Memuat data GeoJSON dari file lokal
+        fetch('assets/IRIGASI_BOALEMO.json')
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(json) {
+                addGeoJsonData(json, "Irigasi");
+            })
+            .catch(function(err) {
+                console.error('Error memuat data GeoJSON: ' + err);
+            });
+
+        // Memuat data GeoJSON dari file lokal
+        
     </script>
 
     <script src="{{ asset('assets/js/irigasiDataHandler.js') }}"></script>
-
-    <!-- Script untuk memuat GeoJSON dan menambahkan kontrol checkbox -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var map = L.map('maps').setView([0.5351126, 122.338338], 12);
-
-            L.tileLayer('http://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}', {
-                maxZoom: 20,
-                subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
-            }).addTo(map);
-
-            var geojsonLayer;
-
-            fetch('/assets/IRIGASI_BOALEMO.json')
-                .then(response => response.json())
-                .then(data => {
-                    geojsonLayer = L.geoJSON(data, {
-                        style: function(feature) {
-                            return {color: 'blue'};
-                        },
-                        filter: function(feature, layer) {
-                            return feature.properties.REMARK === "Jaringan Irigasi Tabulo Latula"; // Default filter
-                        }
-                    }).addTo(map);
-                    initializeCheckboxes(data);
-                });
-
-            // function initializeCheckboxes(data) {
-            //     const remarks = [...new Set(data.features.map(item => item.properties.REMARK))];
-            //     const container = document.getElementById('checkboxes');
-            //     remarks.forEach(remark => {
-            //         const checkbox = document.createElement('input');
-            //         checkbox.type = 'checkbox';
-            //         checkbox.id = remark;
-            //         checkbox.checked = remark === "Jaringan Irigasi Tabulo Latula"; // Default checked
-            //         checkbox.onchange = function() {
-            //             updateMap(remark, this.checked);
-            //         };
-
-            //         const label = document.createElement('label');
-            //         label.htmlFor = remark;
-            //         label.appendChild(document.createTextNode(remark));
-
-            //         container.appendChild(checkbox);
-            //         container.appendChild(label);
-            //         container.appendChild(document.createElement('br'));
-            //     });
-            // }
-
-            // function updateMap(remark, checked) {
-            //     map.removeLayer(geojsonLayer);
-            //     geojsonLayer = L.geoJSON(data, {
-            //         style: function(feature) {
-            //             return {color: 'blue'};
-            //         },
-            //         filter: function(feature, layer) {
-            //             if (checked) {
-            //                 return feature.properties.REMARK === remark;
-            //             }
-            //             return false;
-            //         }
-            //     }).addTo(map);
-            // }
-        });
-    </script>
 </body>
 
 </html>
